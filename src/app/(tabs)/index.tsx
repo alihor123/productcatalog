@@ -1,12 +1,11 @@
 import { ArrowDown, Search } from '@/assets/icons'
 import { ProductCard } from '@/components/ProductCard'
-import { ProductContext } from '@/context/ProductContext'
 import { showMessage } from '@/helpers'
 import { useStyles } from '@/hooks/useStyles'
-import { getCategories, getProducts, type Category } from '@/services/products.api'
+import { getCategories, getProducts, type Category, type Product } from '@/services/products.api'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ApiError } from '@/services/api'
@@ -149,7 +148,7 @@ export default function Index() {
     }
   }))
 
-  const { products, setProducts } = useContext(ProductContext)!
+  const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [sort, setSort] = useState<'price_asc' | 'price_desc'>('price_asc')
   const [filter, setFilter] = useState<string | null>(null)
@@ -323,14 +322,14 @@ export default function Index() {
 
   if (categories.length === 0 && (isLoading || isErrorLoading)) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         {renderCatalogStatus()}
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Продукты</Text>

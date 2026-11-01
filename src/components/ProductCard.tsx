@@ -1,7 +1,9 @@
-import { ChevronRight } from '@/assets/icons'
+import { ChevronRight, Star, StarFilled } from '@/assets/icons'
+import { ProductContext } from '@/context/ProductContext'
 import { useStyles } from '@/hooks/useStyles'
 import { type Product } from '@/services/products.api'
 import { Image } from 'expo-image'
+import { useContext } from 'react'
 import { Pressable, Text, View } from 'react-native'
 
 type ProductCardProps = {
@@ -46,12 +48,38 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
       fontWeight: '600',
       color: colors.text
     },
+    productActions: {
+      alignSelf: 'stretch',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      gap: 8
+    },
+    favoriteButton: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    favoriteIcon: {
+      width: 24,
+      height: 24,
+      tintColor: colors.textSecondary
+    },
+    favoriteSelectedIcon: {
+      tintColor: colors.rating
+    },
+    buttonPressed: {
+      opacity: 0.6
+    },
     productArrow: {
       width: 20,
       height: 20,
       tintColor: colors.textSecondary
     }
   }))
+
+  const { favoriteProducts, isFavoritesLoading, changeFavorite } = useContext(ProductContext)!
+  const isFavorite = Boolean(favoriteProducts[product.uuid])
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.product, pressed && styles.productPressed]}>
@@ -67,11 +95,24 @@ export function ProductCard({ product, onPress }: ProductCardProps) {
           {(product.price / 100).toLocaleString('ru-RU', { style: 'currency', currency: product.currency })}
         </Text>
       </View>
-      <Image
-        source={ChevronRight}
-        style={styles.productArrow}
-        tintColor={styles.productArrow.tintColor}
-      />
+      <View style={styles.productActions}>
+        <Image source={ChevronRight} style={styles.productArrow} tintColor={styles.productArrow.tintColor} />
+        <Pressable
+          disabled={isFavoritesLoading}
+          hitSlop={8}
+          onPress={event => {
+            event.stopPropagation()
+            changeFavorite(product)
+          }}
+          style={({ pressed }) => [styles.favoriteButton, pressed && styles.buttonPressed]}
+        >
+          <Image
+            source={isFavorite ? StarFilled : Star}
+            style={styles.favoriteIcon}
+            tintColor={isFavorite ? styles.favoriteSelectedIcon.tintColor : styles.favoriteIcon.tintColor}
+          />
+        </Pressable>
+      </View>
     </Pressable>
   )
 }
