@@ -1,10 +1,10 @@
 import { ArrowDown, Search } from '@/assets/icons'
 import { ProductCard } from '@/components/ProductCard'
-import { categories, products } from '@/constants/productConstants'
+import { ProductContext } from '@/context/ProductContext'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -126,6 +126,15 @@ export default function Index() {
     }
   }))
 
+  const { products } = useContext(ProductContext)!
+  const [categories] = useState([
+    { name: 'Все', value: null },
+    { name: 'Смартфоны', value: 'smartphones' },
+    { name: 'Ноутбуки', value: 'laptops' },
+    { name: 'Мебель', value: 'furniture' },
+    { name: 'Косметика', value: 'beauty' },
+    { name: 'Парфюмерия', value: 'fragrances' }
+  ])
   const [sort, setSort] = useState<'Дешевле' | 'Дороже'>('Дешевле')
   const [filter, setFilter] = useState<string | null>(null)
   const [search, setSearch] = useState('')

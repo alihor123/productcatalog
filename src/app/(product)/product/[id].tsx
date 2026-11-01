@@ -1,8 +1,9 @@
 import { StarFilled } from '@/assets/icons'
-import { products } from '@/constants/productConstants'
+import { ProductContext } from '@/context/ProductContext'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
 import { useLocalSearchParams } from 'expo-router'
+import { useContext } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -92,6 +93,7 @@ export default function ProductScreen() {
     }
   }))
 
+  const { products } = useContext(ProductContext)!
   const { id } = useLocalSearchParams<{ id: string }>()
   const product = products.find(product => product.id === Number(id))
 
