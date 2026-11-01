@@ -3,7 +3,18 @@ import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
 import { Pressable, Text, View } from 'react-native'
 
-export function ProductCard() {
+type ProductCardProps = {
+  product: {
+    title: string
+    category: string
+    price: number
+    rating: number
+    img: string | null
+  }
+  categoryName: string
+}
+
+export function ProductCard({ product, categoryName }: ProductCardProps) {
   const styles = useStyles((colors) => ({
     product: {
       flexDirection: 'row',
@@ -70,11 +81,20 @@ export function ProductCard() {
 
   return (
     <Pressable style={({ pressed }) => [styles.product, pressed && styles.productPressed]}>
-      <View style={styles.productImage} />
+      {product.img === null && <View style={styles.productImage} />}
+      {product.img !== null && (
+        <Image
+          source={{ uri: product.img }}
+          style={styles.productImage}
+          contentFit="contain"
+        />
+      )}
       <View style={styles.productInfo}>
-        <Text style={styles.productTitle} numberOfLines={2}>Samsung Galaxy S24</Text>
-        <Text style={styles.productCategory}>Смартфоны</Text>
-        <Text style={styles.productPrice}>799,99 $</Text>
+        <Text style={styles.productTitle} numberOfLines={2}>{product.title}</Text>
+        <Text style={styles.productCategory}>{categoryName}</Text>
+        <Text style={styles.productPrice}>
+          {product.price.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+        </Text>
       </View>
       <View style={styles.productActions}>
         <Image
@@ -88,7 +108,7 @@ export function ProductCard() {
             style={styles.productStar}
             tintColor={styles.productStar.tintColor}
           />
-          <Text style={styles.productRatingText}>4,8</Text>
+          <Text style={styles.productRatingText}>{product.rating.toLocaleString('ru-RU')}</Text>
         </View>
       </View>
     </Pressable>

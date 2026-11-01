@@ -2,7 +2,7 @@ import { Search } from '@/assets/icons'
 import { ProductCard } from '@/components/ProductCard'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const categories = [
@@ -12,6 +12,73 @@ const categories = [
   { name: 'Мебель', value: 'furniture' },
   { name: 'Косметика', value: 'beauty' },
   { name: 'Парфюмерия', value: 'fragrances' }
+]
+
+const products = [
+  {
+    id: 1,
+    title: 'Samsung Galaxy S24',
+    category: 'smartphones',
+    price: 799.99,
+    rating: 4.8,
+    img: null
+  },
+  {
+    id: 2,
+    title: 'Apple iPhone 15',
+    category: 'smartphones',
+    price: 699.99,
+    rating: 4.7,
+    img: null
+  },
+  {
+    id: 3,
+    title: 'Asus Zenbook 14',
+    category: 'laptops',
+    price: 999.99,
+    rating: 4.6,
+    img: null
+  },
+  {
+    id: 4,
+    title: 'Lenovo IdeaPad Slim 5',
+    category: 'laptops',
+    price: 749.99,
+    rating: 4.4,
+    img: null
+  },
+  {
+    id: 5,
+    title: 'Обеденный стол',
+    category: 'furniture',
+    price: 249.99,
+    rating: 4.5,
+    img: null
+  },
+  {
+    id: 6,
+    title: 'Увлажняющий крем',
+    category: 'beauty',
+    price: 19.99,
+    rating: 4.3,
+    img: null
+  },
+  {
+    id: 7,
+    title: 'Парфюмерная вода',
+    category: 'fragrances',
+    price: 59.99,
+    rating: 4.6,
+    img: null
+  },
+  {
+    id: 8,
+    title: 'Офисное кресло',
+    category: 'furniture',
+    price: 129.99,
+    rating: 4.2,
+    img: null
+  }
 ]
 
 export default function Index() {
@@ -84,8 +151,12 @@ export default function Index() {
     categorySelectedText: {
       color: colors.onPrimary
     },
-    productSection: {
-      paddingHorizontal: 24
+    productList: {
+      flex: 1
+    },
+    productListContent: {
+      paddingHorizontal: 24,
+      gap: 12
     },
     buttonPressed: {
       opacity: 0.6
@@ -136,9 +207,18 @@ export default function Index() {
           ))}
         </ScrollView>
 
-        <View style={styles.productSection}>
-          <ProductCard />
-        </View>
+        <FlatList
+          data={products}
+          keyExtractor={item => String(item.id)}
+          style={styles.productList}
+          contentContainerStyle={styles.productListContent}
+          renderItem={({ item }) => (
+            <ProductCard
+              product={item}
+              categoryName={categories.find(category => category.value === item.category)?.name ?? item.category}
+            />
+          )}
+        />
       </View>
     </SafeAreaView>
   )
