@@ -1,7 +1,8 @@
-import { Search } from '@/assets/icons'
+import { ArrowDown, Search } from '@/assets/icons'
 import { ProductCard } from '@/components/ProductCard'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
+import { useState } from 'react'
 import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -95,11 +96,36 @@ export default function Index() {
       paddingVertical: 24,
       gap: 20
     },
-    title: {
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: 24,
+      gap: 12
+    },
+    title: {
       fontSize: 26,
       fontWeight: '700',
       color: colors.text
+    },
+    sortButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 8,
+      gap: 6
+    },
+    sortText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.primary
+    },
+    sortIcon: {
+      width: 18,
+      height: 18,
+      tintColor: colors.primary
+    },
+    sortIconReversed: {
+      transform: [{ rotate: '180deg' }]
     },
     search: {
       marginHorizontal: 24,
@@ -163,10 +189,43 @@ export default function Index() {
     }
   }))
 
+  const [sort, setSort] = useState<'Дешевле' | 'Дороже'>('Дешевле')
+  const [filter, setFilter] = useState<string | null>(null)
+
+  function changeSort() {
+    if (sort === 'Дешевле') {
+      setSort('Дороже')
+    }
+    else {
+      setSort('Дешевле')
+    }
+  }
+
+  const filteredProducts = products.filter(product => filter === null || product.category === filter)
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sort === 'Дешевле') return a.price - b.price
+
+    return b.price - a.price
+  })
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Продукты</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>Продукты</Text>
+          <Pressable
+            onPress={changeSort}
+            style={({ pressed }) => [styles.sortButton, pressed && styles.buttonPressed]}
+          >
+            <Text style={styles.sortText}>{sort}</Text>
+            <Image
+              source={ArrowDown}
+              style={[styles.sortIcon, sort === 'Дороже' && styles.sortIconReversed]}
+              tintColor={styles.sortIcon.tintColor}
+            />
+          </Pressable>
+        </View>
 
         <View style={styles.search}>
           <TextInput
@@ -191,15 +250,16 @@ export default function Index() {
           {categories.map(category => (
             <Pressable
               key={category.value ?? 'all'}
+              onPress={() => setFilter(category.value)}
               style={({ pressed }) => [
                 styles.category,
-                category.value === null && styles.categorySelected,
+                filter === category.value && styles.categorySelected,
                 pressed && styles.buttonPressed
               ]}
             >
               <Text style={[
                 styles.categoryText,
-                category.value === null && styles.categorySelectedText
+                filter === category.value && styles.categorySelectedText
               ]}>
                 {category.name}
               </Text>
@@ -208,7 +268,7 @@ export default function Index() {
         </ScrollView>
 
         <FlatList
-          data={products}
+          data={sortedProducts}
           keyExtractor={item => String(item.id)}
           style={styles.productList}
           contentContainerStyle={styles.productListContent}
