@@ -2,6 +2,7 @@ import { Catalog, Star, StarFilled } from '@/assets/icons'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
 import { Tabs } from 'expo-router'
+import { PlatformPressable } from 'expo-router/react-navigation'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function TabLayout() {
@@ -41,7 +42,13 @@ export default function TabLayout() {
       tabBarStyle: styles.tabBar,
       tabBarLabelStyle: styles.tabLabel,
       tabBarActiveTintColor: styles.activeTab.color,
-      tabBarInactiveTintColor: styles.inactiveTab.color
+      tabBarInactiveTintColor: styles.inactiveTab.color,
+      tabBarButton: props => (
+        <PlatformPressable
+          {...props}
+          pressColor="transparent"
+        />
+      )
     }}>
       <Tabs.Screen name="index" options={{
         title: 'Каталог',
