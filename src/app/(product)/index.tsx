@@ -1,12 +1,15 @@
 import { ArrowDown, Search } from '@/assets/icons'
 import { ProductCard } from '@/components/ProductCard'
 import { ProductContext } from '@/context/ProductContext'
+import { showMessage } from '@/helpers'
 import { useStyles } from '@/hooks/useStyles'
+import { getCategories, getProducts, type Category } from '@/services/products.api'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
-import { useContext, useState } from 'react'
-import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { ApiError } from '@/services/api'
 
 export default function Index() {
   const styles = useStyles((colors) => ({
@@ -121,49 +124,210 @@ export default function Index() {
       fontSize: 16,
       color: colors.textSecondary
     },
+    loader: {
+      color: colors.primary
+    },
+    retryButton: {
+      marginTop: 16,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 999,
+      backgroundColor: colors.primary
+    },
+    retryText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.onPrimary
+    },
+    listFooter: {
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
     buttonPressed: {
       opacity: 0.6
     }
   }))
 
-  const { products } = useContext(ProductContext)!
-  const [categories] = useState([
-    { name: 'Все', value: null },
-    { name: 'Смартфоны', value: 'smartphones' },
-    { name: 'Ноутбуки', value: 'laptops' },
-    { name: 'Мебель', value: 'furniture' },
-    { name: 'Косметика', value: 'beauty' },
-    { name: 'Парфюмерия', value: 'fragrances' }
-  ])
-  const [sort, setSort] = useState<'Дешевле' | 'Дороже'>('Дешевле')
+  const { products, setProducts } = useContext(ProductContext)!
+  const [categories, setCategories] = useState<Category[]>([])
+  const [sort, setSort] = useState<'price_asc' | 'price_desc'>('price_asc')
   const [filter, setFilter] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isErrorLoading, setIsErrorLoading] = useState(false)
+  const [isNextPageLoading, setIsNextPageLoading] = useState(false)
+  const productsRequestRef = useRef(0)
+  const isProductsLoadingRef = useRef(false)
 
-  function changeSort() {
-    if (sort === 'Дешевле') {
-      setSort('Дороже')
+  //Загрузка каталога и продуктов при старте
+  async function loadCatalog() {
+    const request = ++productsRequestRef.current
+    isProductsLoadingRef.current = true
+    setIsLoading(true)
+    setIsErrorLoading(false)
+    setIsNextPageLoading(false)
+
+    try {
+      const [newCategories, data] = await Promise.all([
+        getCategories(),
+        getProducts({ search: search.trim(), category: filter ?? undefined, sort })
+      ])
+
+      if (request !== productsRequestRef.current) return
+
+      setCategories(newCategories)
+      setProducts(data.data)
+      setPage(data.meta.current_page)
+      setTotalPages(data.meta.total_pages)
     }
-    else {
-      setSort('Дешевле')
+    catch {
+      if (request === productsRequestRef.current) {
+        setIsErrorLoading(true)
+      }
+    }
+    finally {
+      if (request === productsRequestRef.current) {
+        isProductsLoadingRef.current = false
+        setIsLoading(false)
+      }
     }
   }
 
-  function openProduct(id: number) {
+  //Обновление товаров при изменении поиска, категории или сортировки
+  async function loadProducts() {
+    const request = ++productsRequestRef.current
+    isProductsLoadingRef.current = true
+    setIsLoading(true)
+    setIsErrorLoading(false)
+    setIsNextPageLoading(false)
+
+    try {
+      const data = await getProducts({ search: search.trim(), category: filter ?? undefined, sort })
+
+      if (request !== productsRequestRef.current) return
+
+      setProducts(data.data)
+      setPage(data.meta.current_page)
+      setTotalPages(data.meta.total_pages)
+    }
+    catch {
+      if (request === productsRequestRef.current) {
+        setIsErrorLoading(true)
+      }
+    }
+    finally {
+      if (request === productsRequestRef.current) {
+        isProductsLoadingRef.current = false
+        setIsLoading(false)
+      }
+    }
+  }
+
+  //Первоначальная загрузка и обновление товаров при сортировке или фильтрации
+  useEffect(
+    () => {
+      isProductsLoadingRef.current = true
+
+      const timer = setTimeout(() => {
+        if (categories.length === 0) {
+          loadCatalog()
+        }
+        else {
+          loadProducts()
+        }
+      }, 200)
+
+      return () => {
+        clearTimeout(timer)
+        productsRequestRef.current += 1
+      }
+    },
+    [search, filter, sort]
+  )
+
+  //Смена сортировки по цене
+  function changeSort() {
+    if (sort === 'price_asc') {
+      setSort('price_desc')
+    }
+    else {
+      setSort('price_asc')
+    }
+  }
+
+  //Загрузка следующей страницы при прокрутке
+  async function loadNextPage() {
+    if (isProductsLoadingRef.current || page >= totalPages) return
+
+    const request = ++productsRequestRef.current
+    isProductsLoadingRef.current = true
+    setIsNextPageLoading(true)
+
+    try {
+      const data = await getProducts({
+        search: search.trim(),
+        category: filter ?? undefined,
+        sort,
+        page: page + 1
+      })
+
+      if (request !== productsRequestRef.current) return
+
+      setProducts(previousProducts => [...previousProducts, ...data.data])
+      setPage(data.meta.current_page)
+      setTotalPages(data.meta.total_pages)
+    }
+    catch (error) {
+      if (request === productsRequestRef.current) {
+        showMessage(error instanceof ApiError ? error.message : 'Не удалось загрузить следующую страницу')
+      }
+    }
+    finally {
+      if (request === productsRequestRef.current) {
+        isProductsLoadingRef.current = false
+        setIsNextPageLoading(false)
+      }
+    }
+  }
+
+  //Открытие экрана конкретного товара
+  function openProduct(uuid: string) {
     router.push({
       pathname: '/product/[id]',
-      params: { id: String(id) }
+      params: { id: uuid }
     })
   }
 
-  const filteredProducts = products.filter(product => filter === null || product.category === filter)
+  //Анимация первоначальной загрузки и отображение ошибки
+  function renderCatalogStatus() {
+    return (
+      <View style={styles.empty}>
+        {isLoading && <ActivityIndicator size="large" color={styles.loader.color} />}
+        {!isLoading && isErrorLoading && (
+          <>
+            <Text style={styles.emptyText}>Не удалось загрузить каталог</Text>
+            <Pressable
+              onPress={loadCatalog}
+              style={({ pressed }) => [styles.retryButton, pressed && styles.buttonPressed]}
+            >
+              <Text style={styles.retryText}>Повторить</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
+    )
+  }
 
-  const searchedProducts = filteredProducts.filter(product => product.title.toLowerCase().includes(search.trim().toLowerCase()))
-
-  const sortedProducts = [...searchedProducts].sort((a, b) => {
-    if (sort === 'Дешевле') return a.price - b.price
-
-    return b.price - a.price
-  })
+  if (categories.length === 0 && (isLoading || isErrorLoading)) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {renderCatalogStatus()}
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -174,10 +338,10 @@ export default function Index() {
             onPress={changeSort}
             style={({ pressed }) => [styles.sortButton, pressed && styles.buttonPressed]}
           >
-            <Text style={styles.sortText}>{sort}</Text>
+            <Text style={styles.sortText}>{sort === 'price_asc' ? 'Дешевле' : 'Дороже'}</Text>
             <Image
               source={ArrowDown}
-              style={[styles.sortIcon, sort === 'Дороже' && styles.sortIconReversed]}
+              style={[styles.sortIcon, sort === 'price_desc' && styles.sortIconReversed]}
               tintColor={styles.sortIcon.tintColor}
             />
           </Pressable>
@@ -205,19 +369,29 @@ export default function Index() {
           style={styles.categories}
           contentContainerStyle={styles.categoriesContent}
         >
+          <Pressable
+            onPress={() => setFilter(null)}
+            style={({ pressed }) => [
+              styles.category,
+              filter === null && styles.categorySelected,
+              pressed && styles.buttonPressed
+            ]}
+          >
+            <Text style={[styles.categoryText, filter === null && styles.categorySelectedText]}>Все</Text>
+          </Pressable>
           {categories.map(category => (
             <Pressable
-              key={category.value ?? 'all'}
-              onPress={() => setFilter(category.value)}
+              key={category.id}
+              onPress={() => setFilter(category.slug)}
               style={({ pressed }) => [
                 styles.category,
-                filter === category.value && styles.categorySelected,
+                filter === category.slug && styles.categorySelected,
                 pressed && styles.buttonPressed
               ]}
             >
               <Text style={[
                 styles.categoryText,
-                filter === category.value && styles.categorySelectedText
+                filter === category.slug && styles.categorySelectedText
               ]}>
                 {category.name}
               </Text>
@@ -225,24 +399,34 @@ export default function Index() {
           ))}
         </ScrollView>
 
-        <FlatList
-          data={sortedProducts}
-          keyboardShouldPersistTaps="handled"
-          keyExtractor={item => String(item.id)}
-          style={styles.productList}
-          contentContainerStyle={styles.productListContent}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Ничего не найдено</Text>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <ProductCard
-              product={item}
-              onPress={() => openProduct(item.id)}
-            />
-          )}
-        />
+        {(isLoading || isErrorLoading) && renderCatalogStatus()}
+        {!isLoading && !isErrorLoading && (
+          <FlatList
+            data={products}
+            keyboardShouldPersistTaps="handled"
+            keyExtractor={item => item.uuid}
+            style={styles.productList}
+            contentContainerStyle={styles.productListContent}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <Text style={styles.emptyText}>Ничего не найдено</Text>
+              </View>
+            }
+            onEndReached={loadNextPage}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              <View style={styles.listFooter}>
+                {isNextPageLoading && <ActivityIndicator color={styles.loader.color} />}
+              </View>
+            }
+            renderItem={({ item }) => (
+              <ProductCard
+                product={item}
+                onPress={() => openProduct(item.uuid)}
+              />
+            )}
+          />
+        )}
       </View>
     </SafeAreaView>
   )

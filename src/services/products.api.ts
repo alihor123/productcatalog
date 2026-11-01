@@ -79,6 +79,7 @@ const PRODUCT_ERRORS: Errors = {
   504: 'Сервис товаров не ответил вовремя. Попробуйте позже'
 }
 
+//Получение товаров с поиском, фильтрацией, сортировкой и пагинацией
 export async function getProducts({
   search,
   category,
@@ -104,6 +105,7 @@ export async function getProducts({
   }
 }
 
+//Получение категорий товаров
 export async function getCategories(): Promise<Category[]> {
   try {
     const response = await Api.fetchGet(`${apiUrl}/categories`, CATEGORIES_ERRORS, true)
@@ -115,6 +117,7 @@ export async function getCategories(): Promise<Category[]> {
   }
 }
 
+//Получение товара по UUID
 export async function getProduct(uuid: string): Promise<Product> {
   try {
     const response = await Api.fetchGet(`${apiUrl}/products/${encodeURIComponent(uuid)}`, PRODUCT_ERRORS, true)

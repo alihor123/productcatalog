@@ -1,4 +1,3 @@
-import { StarFilled } from '@/assets/icons'
 import { ProductContext } from '@/context/ProductContext'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
@@ -54,20 +53,6 @@ export default function ProductScreen() {
       fontWeight: '700',
       color: colors.primary
     },
-    productRating: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6
-    },
-    productStar: {
-      width: 20,
-      height: 20,
-      tintColor: colors.rating
-    },
-    productRatingText: {
-      fontSize: 16,
-      color: colors.text
-    },
     description: {
       gap: 12
     },
@@ -95,7 +80,7 @@ export default function ProductScreen() {
 
   const { products } = useContext(ProductContext)!
   const { id } = useLocalSearchParams<{ id: string }>()
-  const product = products.find(product => product.id === Number(id))
+  const product = products.find(product => product.uuid === id)
 
   if (!product) {
     return (
@@ -110,24 +95,17 @@ export default function ProductScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {product.img === null && <View style={styles.productImage} />}
-        {product.img !== null && (
-          <Image source={{ uri: product.img }} style={styles.productImage} contentFit="contain" />
-        )}
+        <Image source={{ uri: product.image_url }} style={styles.productImage} contentFit="contain" />
 
         <View style={styles.productInfo}>
-          <Text style={styles.productTitle}>{product.title}</Text>
+          <Text style={styles.productTitle}>{product.name}</Text>
           <Text style={styles.productCategory}>{product.category}</Text>
         </View>
 
         <View style={styles.productDetails}>
           <Text style={styles.productPrice}>
-            {product.price.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
+            {(product.price / 100).toLocaleString('ru-RU', { style: 'currency', currency: product.currency })}
           </Text>
-          <View style={styles.productRating}>
-            <Image source={StarFilled} style={styles.productStar} tintColor={styles.productStar.tintColor} />
-            <Text style={styles.productRatingText}>{product.rating.toLocaleString('ru-RU')}</Text>
-          </View>
         </View>
 
         <View style={styles.description}>
