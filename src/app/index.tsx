@@ -184,6 +184,12 @@ export default function Index() {
       paddingHorizontal: 24,
       gap: 12
     },
+    emptyText: {
+      paddingVertical: 32,
+      textAlign: 'center',
+      fontSize: 16,
+      color: colors.textSecondary
+    },
     buttonPressed: {
       opacity: 0.6
     }
@@ -191,6 +197,7 @@ export default function Index() {
 
   const [sort, setSort] = useState<'Дешевле' | 'Дороже'>('Дешевле')
   const [filter, setFilter] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   function changeSort() {
     if (sort === 'Дешевле') {
@@ -203,7 +210,9 @@ export default function Index() {
 
   const filteredProducts = products.filter(product => filter === null || product.category === filter)
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  const searchedProducts = filteredProducts.filter(product => product.title.toLowerCase().includes(search.trim().toLowerCase()))
+
+  const sortedProducts = [...searchedProducts].sort((a, b) => {
     if (sort === 'Дешевле') return a.price - b.price
 
     return b.price - a.price
@@ -229,6 +238,8 @@ export default function Index() {
 
         <View style={styles.search}>
           <TextInput
+            value={search}
+            onChangeText={setSearch}
             style={styles.searchInput}
             placeholder="Поиск товаров"
             placeholderTextColor={styles.placeholder.color}
@@ -272,6 +283,7 @@ export default function Index() {
           keyExtractor={item => String(item.id)}
           style={styles.productList}
           contentContainerStyle={styles.productListContent}
+          ListEmptyComponent={<Text style={styles.emptyText}>Ничего не найдено</Text>}
           renderItem={({ item }) => (
             <ProductCard
               product={item}
