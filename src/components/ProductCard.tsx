@@ -3,18 +3,22 @@ import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
 import { Pressable, Text, View } from 'react-native'
 
-type ProductCardProps = {
-  product: {
-    title: string
-    category: string
-    price: number
-    rating: number
-    img: string | null
-  }
-  categoryName: string
+export type Product = {
+  id: number
+  title: string
+  description: string
+  category: string
+  price: number
+  rating: number
+  img: string | null
 }
 
-export function ProductCard({ product, categoryName }: ProductCardProps) {
+type ProductCardProps = {
+  product: Product
+  onPress: () => void
+}
+
+export function ProductCard({ product, onPress }: ProductCardProps) {
   const styles = useStyles((colors) => ({
     product: {
       flexDirection: 'row',
@@ -80,7 +84,7 @@ export function ProductCard({ product, categoryName }: ProductCardProps) {
   }))
 
   return (
-    <Pressable style={({ pressed }) => [styles.product, pressed && styles.productPressed]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.product, pressed && styles.productPressed]}>
       {product.img === null && <View style={styles.productImage} />}
       {product.img !== null && (
         <Image
@@ -91,7 +95,7 @@ export function ProductCard({ product, categoryName }: ProductCardProps) {
       )}
       <View style={styles.productInfo}>
         <Text style={styles.productTitle} numberOfLines={2}>{product.title}</Text>
-        <Text style={styles.productCategory}>{categoryName}</Text>
+        <Text style={styles.productCategory}>{product.category}</Text>
         <Text style={styles.productPrice}>
           {product.price.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $
         </Text>

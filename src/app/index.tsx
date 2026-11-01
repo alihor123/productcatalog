@@ -1,86 +1,12 @@
 import { ArrowDown, Search } from '@/assets/icons'
 import { ProductCard } from '@/components/ProductCard'
+import { categories, products } from '@/constants/productConstants'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
+import { router } from 'expo-router'
 import { useState } from 'react'
 import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-const categories = [
-  { name: 'Все', value: null },
-  { name: 'Смартфоны', value: 'smartphones' },
-  { name: 'Ноутбуки', value: 'laptops' },
-  { name: 'Мебель', value: 'furniture' },
-  { name: 'Косметика', value: 'beauty' },
-  { name: 'Парфюмерия', value: 'fragrances' }
-]
-
-const products = [
-  {
-    id: 1,
-    title: 'Samsung Galaxy S24',
-    category: 'smartphones',
-    price: 799.99,
-    rating: 4.8,
-    img: null
-  },
-  {
-    id: 2,
-    title: 'Apple iPhone 15',
-    category: 'smartphones',
-    price: 699.99,
-    rating: 4.7,
-    img: null
-  },
-  {
-    id: 3,
-    title: 'Asus Zenbook 14',
-    category: 'laptops',
-    price: 999.99,
-    rating: 4.6,
-    img: null
-  },
-  {
-    id: 4,
-    title: 'Lenovo IdeaPad Slim 5',
-    category: 'laptops',
-    price: 749.99,
-    rating: 4.4,
-    img: null
-  },
-  {
-    id: 5,
-    title: 'Обеденный стол',
-    category: 'furniture',
-    price: 249.99,
-    rating: 4.5,
-    img: null
-  },
-  {
-    id: 6,
-    title: 'Увлажняющий крем',
-    category: 'beauty',
-    price: 19.99,
-    rating: 4.3,
-    img: null
-  },
-  {
-    id: 7,
-    title: 'Парфюмерная вода',
-    category: 'fragrances',
-    price: 59.99,
-    rating: 4.6,
-    img: null
-  },
-  {
-    id: 8,
-    title: 'Офисное кресло',
-    category: 'furniture',
-    price: 129.99,
-    rating: 4.2,
-    img: null
-  }
-]
 
 export default function Index() {
   const styles = useStyles((colors) => ({
@@ -181,11 +107,16 @@ export default function Index() {
       flex: 1
     },
     productListContent: {
+      flexGrow: 1,
       paddingHorizontal: 24,
       gap: 12
     },
+    empty: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
     emptyText: {
-      paddingVertical: 32,
       textAlign: 'center',
       fontSize: 16,
       color: colors.textSecondary
@@ -206,6 +137,13 @@ export default function Index() {
     else {
       setSort('Дешевле')
     }
+  }
+
+  function openProduct(id: number) {
+    router.push({
+      pathname: '/product/[id]',
+      params: { id: String(id) }
+    })
   }
 
   const filteredProducts = products.filter(product => filter === null || product.category === filter)
@@ -280,14 +218,19 @@ export default function Index() {
 
         <FlatList
           data={sortedProducts}
+          keyboardShouldPersistTaps="handled"
           keyExtractor={item => String(item.id)}
           style={styles.productList}
           contentContainerStyle={styles.productListContent}
-          ListEmptyComponent={<Text style={styles.emptyText}>Ничего не найдено</Text>}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>Ничего не найдено</Text>
+            </View>
+          }
           renderItem={({ item }) => (
             <ProductCard
               product={item}
-              categoryName={categories.find(category => category.value === item.category)?.name ?? item.category}
+              onPress={() => openProduct(item.id)}
             />
           )}
         />
