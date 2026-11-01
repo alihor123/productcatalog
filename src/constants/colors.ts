@@ -1,6 +1,8 @@
 export const Colors = {
   light: {
     background: '#FFFFFF',
+    imagePlaceholder: '#E2E5EA',
+    rating: '#FFB300',
     textSecondary: '#8A96AA',
     text: '#1E293B',
     border: '#E8EDF4',
@@ -21,6 +23,8 @@ export const Colors = {
 
   dark: {
     background: '#101722',
+    imagePlaceholder: '#303B4A',
+    rating: '#FFC247',
     textSecondary: '#94A3B8',
     text: '#F1F5F9',
     border: '#2B3749',

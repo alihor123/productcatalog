@@ -1,4 +1,5 @@
 import { Search } from '@/assets/icons'
+import { ProductCard } from '@/components/ProductCard'
 import { useStyles } from '@/hooks/useStyles'
 import { Image } from 'expo-image'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
@@ -83,6 +84,9 @@ export default function Index() {
     categorySelectedText: {
       color: colors.onPrimary
     },
+    productSection: {
+      paddingHorizontal: 24
+    },
     buttonPressed: {
       opacity: 0.6
     }
@@ -131,6 +135,10 @@ export default function Index() {
             </Pressable>
           ))}
         </ScrollView>
+
+        <View style={styles.productSection}>
+          <ProductCard />
+        </View>
       </View>
     </SafeAreaView>
   )
